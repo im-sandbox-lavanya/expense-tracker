@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        form { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+        input, select { flex: 1 1 120px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 16px; background: #0078d7; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005fa3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f0f0f0; }
+        .delete-btn { background: #e81123; color: #fff; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; }
+        .delete-btn:hover { background: #a80000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Expense Tracker</h1>
+        <form id="expense-form">
+            <input type="text" id="name" placeholder="Name" required>
+            <input type="number" id="amount" placeholder="Amount" required step="0.01" min="0">
+            <input type="text" id="category" placeholder="Category" required>
+            <input type="text" id="description" placeholder="Description" required>
+            <input type="date" id="date" required>
+            <button type="submit">Add Expense</button>
+        </form>
+        <table id="expenses-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Expenses will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // Helper to get today's date in YYYY-MM-DD
+        function today() {
+            const d = new Date();
+            return d.toISOString().split('T')[0];
+        }
+        document.getElementById('date').value = today();
+
+        // Load expenses from localStorage
+        function loadExpenses() {
+            return JSON.parse(localStorage.getItem('expenses') || '[]');
+        }
+        // Save expenses to localStorage
+        function saveExpenses(expenses) {
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
+        // Render expenses in the table
+        function renderExpenses() {
+            const expenses = loadExpenses();
+            const tbody = document.querySelector('#expenses-table tbody');
+            tbody.innerHTML = '';
+            expenses.forEach(exp => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${exp.id}</td>
+                    <td>${exp.name || ''}</td>
+                    <td>${exp.amount.toFixed(2)}</td>
+                    <td>${exp.category}</td>
+                    <td>${exp.description}</td>
+                    <td>${exp.date}</td>
+                    <td><button class="delete-btn" data-id="${exp.id}">Delete</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        // Add expense
+        document.getElementById('expense-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('category').value;
+            const description = document.getElementById('description').value;
+            const date = document.getElementById('date').value;
+            let expenses = loadExpenses();
+            const id = expenses.length ? expenses[expenses.length-1].id + 1 : 1;
+            expenses.push({ id, name, amount, category, description, date });
+            saveExpenses(expenses);
+            renderExpenses();
+            this.reset();
+            document.getElementById('date').value = today();
+        });
+        // Delete expense
+        document.querySelector('#expenses-table').addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-btn')) {
+                const id = parseInt(e.target.getAttribute('data-id'));
+                let expenses = loadExpenses();
+                expenses = expenses.filter(exp => exp.id !== id);
+                // Reassign IDs
+                expenses.forEach((exp, idx) => exp.id = idx + 1);
+                saveExpenses(expenses);
+                renderExpenses();
+            }
+        });
+        // Initial render
+        renderExpenses();
+    </script>
+</body>
+</html>
