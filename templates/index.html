@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Expense Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f0f0f0; }
+        .actions { text-align: center; }
+        a, button { padding: 4px 8px; }
+    </style>
+</head>
+<body>
+    <h1>Expense Tracker</h1>
+    <a href="{{ url_for('add_expense') }}">Add Expense</a>
+    <a href="{{ url_for('export_expenses') }}">Export Expenses</a>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Amount</th>
+            <th>Description</th>
+            <th class="actions">Delete</th>
+        </tr>
+        {% for idx, exp in enumerate(expenses) %}
+        <tr>
+            <td>{{ idx }}</td>
+            <td>{{ exp.date }}</td>
+            <td>{{ exp.name }}</td>
+            <td>{{ '%.2f'|format(exp.amount) }}</td>
+            <td>{{ exp.description }}</td>
+            <td class="actions">
+                <form action="{{ url_for('delete_expense', idx=idx) }}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Delete this expense?');">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% if not expenses %}<p>No expenses found.</p>{% endif %}
+</body>
+</html>
