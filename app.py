@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 import json
 import os
+import csv
+import io
 from datetime import datetime
 
 app = Flask(__name__)
@@ -40,6 +42,31 @@ def delete_expense(idx):
         expenses.pop(idx)
         save_expenses(expenses)
     return redirect(url_for('index'))
+
+@app.route('/export')
+def export_expenses():
+    expenses = load_expenses()
+    if not expenses:
+        return redirect(url_for('index'))
+    
+    # Create CSV content in memory
+    output = io.StringIO()
+    fieldnames = ['date', 'description', 'amount']
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    for expense in expenses:
+        writer.writerow(expense)
+    
+    # Create response with CSV data
+    csv_data = output.getvalue()
+    output.close()
+    
+    filename = f"expenses_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-disposition": f"attachment; filename={filename}"}
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)

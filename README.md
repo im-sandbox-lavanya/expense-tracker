@@ -9,6 +9,7 @@ This is a simple Python application to track your expenses. You can add, view, a
 - Add expenses
 - View expenses
 - Delete expenses
+- Export expenses to CSV
 
 ## Usage
 

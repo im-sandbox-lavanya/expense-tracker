@@ -1,8 +1,14 @@
 import json
 import os
+import csv
 from datetime import datetime
-import tkinter as tk
-from tkinter import messagebox, simpledialog
+
+try:
+    import tkinter as tk
+    from tkinter import messagebox, simpledialog
+    TKINTER_AVAILABLE = True
+except ImportError:
+    TKINTER_AVAILABLE = False
 
 DATA_FILE = 'expenses.json'
 
@@ -47,6 +53,24 @@ def delete_expense():
         print(f"Deleted: {removed['description']} ({removed['amount']})")
     else:
         print('Invalid ID.')
+
+def export_expenses():
+    expenses = load_expenses()
+    if not expenses:
+        print('No expenses to export.')
+        return
+    
+    filename = f"expenses_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+    try:
+        with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['date', 'description', 'amount']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for expense in expenses:
+                writer.writerow(expense)
+        print(f'Expenses exported to {filename}')
+    except Exception as e:
+        print(f'Error exporting expenses: {e}')
 
 def gui_add_expense():
     def save():
@@ -106,6 +130,24 @@ def gui_delete_expense():
     else:
         messagebox.showerror('Error', 'Invalid ID.')
 
+def gui_export_expenses():
+    expenses = load_expenses()
+    if not expenses:
+        messagebox.showinfo('Info', 'No expenses to export.')
+        return
+    
+    filename = f"expenses_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+    try:
+        with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['date', 'description', 'amount']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for expense in expenses:
+                writer.writerow(expense)
+        messagebox.showinfo('Export Complete', f'Expenses exported to {filename}')
+    except Exception as e:
+        messagebox.showerror('Export Error', f'Error exporting expenses: {e}')
+
 def run_gui():
     global root, list_frame
     root = tk.Tk()
@@ -113,6 +155,7 @@ def run_gui():
     tk.Button(root, text='Add Expense', command=gui_add_expense).pack(fill='x')
     tk.Button(root, text='View Expenses', command=gui_view_expenses).pack(fill='x')
     tk.Button(root, text='Delete Expense', command=gui_delete_expense).pack(fill='x')
+    tk.Button(root, text='Export Expenses', command=gui_export_expenses).pack(fill='x')
     list_frame = tk.Frame(root)
     list_frame.pack(fill='both', expand=True)
     gui_view_expenses()
@@ -124,7 +167,8 @@ def main():
         print('1. Add Expense')
         print('2. View Expenses')
         print('3. Delete Expense')
-        print('4. Exit')
+        print('4. Export Expenses')
+        print('5. Exit')
         choice = input('Choose an option: ')
         if choice == '1':
             add_expense()
@@ -133,6 +177,8 @@ def main():
         elif choice == '3':
             delete_expense()
         elif choice == '4':
+            export_expenses()
+        elif choice == '5':
             break
         else:
             print('Invalid choice.')
@@ -140,6 +186,10 @@ def main():
 if __name__ == '__main__':
     mode = input('Type "gui" for graphical interface or press Enter for CLI: ')
     if mode.strip().lower() == 'gui':
-        run_gui()
+        if TKINTER_AVAILABLE:
+            run_gui()
+        else:
+            print('GUI mode not available. Tkinter is not installed. Running CLI mode instead.')
+            main()
     else:
         main()
