@@ -1,0 +1,12 @@
+[
+  {
+    "description": "Test Lunch",
+    "amount": 12.5,
+    "date": "2023-01-15"
+  },
+  {
+    "description": "Coffee",
+    "amount": 4.0,
+    "date": "2023-01-16"
+  }
+]
