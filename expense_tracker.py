@@ -5,6 +5,17 @@ from datetime import datetime
 DATA_FILE = 'expenses.json'
 
 def load_expenses():
+    """
+    Load expense data from the JSON data file.
+
+    This function reads the expense data from the DATA_FILE. If the file doesn't exist,
+    it returns an empty list indicating no expenses are recorded yet.
+
+    Returns:
+        list: A list of expense dictionaries. Each dictionary represents an expense
+              with keys like 'amount', 'category', 'description', and 'date'.
+              Returns an empty list if the data file does not exist.
+    """
     if not os.path.exists(DATA_FILE):
         return []
     with open(DATA_FILE, 'r') as f:

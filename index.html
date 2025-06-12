@@ -30,6 +30,7 @@
             <input type="date" id="date" required>
             <button type="submit">Add Expense</button>
         </form>
+        <button id="export-btn" style="margin-bottom:16px;">Export to Excel</button>
         <table id="expenses-table">
             <thead>
                 <tr>
@@ -110,6 +111,39 @@
                 renderExpenses();
             }
         });
+        // Export to Excel functionality
+        document.getElementById('export-btn').addEventListener('click', function () {
+            const expenses = loadExpenses();
+            if (!expenses.length) {
+                alert('No expenses to export.');
+                return;
+            }
+            // Prepare CSV content
+            const header = ['ID', 'Name', 'Amount', 'Category', 'Description', 'Date'];
+            const rows = expenses.map(exp => [
+                exp.id,
+                exp.name || '',
+                exp.amount.toFixed(2),
+                exp.category,
+                exp.description,
+                exp.date
+            ]);
+            const csvContent = [header, ...rows]
+                .map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+                .join('\r\n');
+
+            // Create a Blob and trigger download as .xls (Excel can open CSV)
+            const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'expenses.xls';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
         // Initial render
         renderExpenses();
     </script>
