@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Summary</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f0f0f0; }
+        button { padding: 8px 16px; background: #0078d7; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005fa3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Expense Summary</h1>
+        <div id="summary-content"></div>
+        <button id="back-btn" style="margin-top:16px;">Back</button>
+    </div>
+    <script>
+        function loadExpenses() {
+            return JSON.parse(localStorage.getItem('expenses') || '[]');
+        }
+        function renderSummary() {
+            const expenses = loadExpenses();
+            const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const perCategory = {};
+            expenses.forEach(exp => {
+                perCategory[exp.category] = (perCategory[exp.category] || 0) + exp.amount;
+            });
+            let html = `<p><strong>Total Expenses:</strong> ₹${total.toFixed(2)}</p>`;
+            html += `<table style="width:100%;margin-top:12px;"><thead><tr><th>Category</th><th>Total</th></tr></thead><tbody>`;
+            Object.entries(perCategory).forEach(([cat, amt]) => {
+                html += `<tr><td>${cat}</td><td>₹${amt.toFixed(2)}</td></tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('summary-content').innerHTML = html;
+        }
+        document.getElementById('back-btn').addEventListener('click', function() {
+            window.location.href = 'index.html';
+        });
+        renderSummary();
+    </script>
+</body>
+</html>

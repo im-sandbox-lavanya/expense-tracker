@@ -75,13 +75,24 @@ def delete_expense():
     save_expenses(new_expenses)
     print('Expense deleted!')
 
+def clear_expenses():
+    """
+    Remove all expenses by deleting the data file if it exists.
+    """
+    if os.path.exists(DATA_FILE):
+        os.remove(DATA_FILE)
+        print('All expenses removed.')
+    else:
+        print('No expenses to remove.')
+
 def main():
     while True:
         print('\nExpense Tracker')
         print('1. Add Expense')
         print('2. View Expenses')
         print('3. Delete Expense')
-        print('4. Exit')
+        print('4. Remove All Expenses')
+        print('5. Exit')
         choice = input('Choose an option: ')
         if choice == '1':
             add_expense()
@@ -90,6 +101,8 @@ def main():
         elif choice == '3':
             delete_expense()
         elif choice == '4':
+            clear_expenses()
+        elif choice == '5':
             print('Goodbye!')
             break
         else:
