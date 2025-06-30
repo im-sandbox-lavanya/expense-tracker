@@ -22,6 +22,7 @@
             <th>Name</th>
             <th>Amount</th>
             <th>Description</th>
+            <th>Comments</th>
             <th class="actions">Delete</th>
         </tr>
         {% for idx, exp in enumerate(expenses) %}
@@ -31,6 +32,7 @@
             <td>{{ exp.name }}</td>
             <td>{{ '%.2f'|format(exp.amount) }}</td>
             <td>{{ exp.description }}</td>
+            <td>{{ exp.comments if exp.comments is defined else '' }}</td>
             <td class="actions">
                 <form action="{{ url_for('delete_expense', idx=idx) }}" method="post" style="display:inline;">
                     <button type="submit" onclick="return confirm('Delete this expense?');">Delete</button>
