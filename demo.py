@@ -44,13 +44,30 @@ def demo_expense_tracker():
     else:
         print("Export failed!")
     
-    # Test auto-generated filename
-    print("\n5. Testing auto-generated filename...")
-    tracker.export_to_csv()
+    # Export to Excel
+    print("\n5. Exporting to Excel...")
+    excel_success = tracker.export_to_excel("demo_export.xlsx")
     
-    # List CSV files created
+    if excel_success:
+        print("\n6. Verifying Excel export...")
+        if os.path.exists("demo_export.xlsx"):
+            file_size = os.path.getsize("demo_export.xlsx")
+            print(f"Excel file created successfully: {file_size} bytes")
+        else:
+            print("Error: Excel file was not created")
+    else:
+        print("Excel export failed!")
+    
+    # Test auto-generated filename
+    print("\n7. Testing auto-generated filename...")
+    tracker.export_to_csv()
+    tracker.export_to_excel()
+    
+    # List files created
     csv_files = [f for f in os.listdir('.') if f.endswith('.csv')]
+    xlsx_files = [f for f in os.listdir('.') if f.endswith('.xlsx')]
     print(f"\nCSV files created: {csv_files}")
+    print(f"Excel files created: {xlsx_files}")
     
     print("\n=== Demo Complete ===")
 
