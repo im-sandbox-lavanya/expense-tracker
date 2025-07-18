@@ -18,7 +18,12 @@ def save_expenses(expenses):
 
 def add_expense():
     description = input('Description: ')
-    amount = float(input('Amount: '))
+    while True:
+        try:
+            amount = float(input('Amount: '))
+            break
+        except ValueError:
+            print("Invalid input. Please enter a valid number for the amount.")
     date = input('Date (YYYY-MM-DD, leave blank for today): ')
     if not date:
         date = datetime.now().strftime('%Y-%m-%d')
