@@ -93,6 +93,73 @@ class ExpenseTracker:
         print("-" * 70)
         print(f"Total: ${total:.2f}")
     
+    def list_expenses_with_indices(self) -> None:
+        """Display all expenses with indices for selection."""
+        if not self.expenses:
+            print("No expenses recorded.")
+            return
+        
+        print("\nExpenses:")
+        print("-" * 80)
+        print(f"{'Index':<6} {'Date':<12} {'Category':<15} {'Amount':<10} {'Description'}")
+        print("-" * 80)
+        
+        for index, expense in enumerate(self.expenses):
+            print(f"{index:<6} {expense.date:<12} {expense.category:<15} {expense.amount:<10.2f} {expense.description}")
+        
+        print("-" * 80)
+    
+    def delete_expense(self, index: int) -> bool:
+        """
+        Delete an expense by index.
+        
+        Args:
+            index: Index of the expense to delete (0-based).
+        
+        Returns:
+            bool: True if deletion successful, False otherwise.
+        """
+        if not self.expenses:
+            print("No expenses to delete.")
+            return False
+        
+        if index < 0 or index >= len(self.expenses):
+            print(f"Invalid index. Please enter a number between 0 and {len(self.expenses) - 1}.")
+            return False
+        
+        deleted_expense = self.expenses.pop(index)
+        self.save_expenses()
+        print(f"Deleted expense: {deleted_expense.amount} for {deleted_expense.description}")
+        return True
+    
+    def edit_expense(self, index: int, date: str, category: str, amount: float, description: str) -> bool:
+        """
+        Edit an existing expense.
+        
+        Args:
+            index: Index of the expense to edit (0-based).
+            date: New date for the expense.
+            category: New category for the expense.
+            amount: New amount for the expense.
+            description: New description for the expense.
+        
+        Returns:
+            bool: True if edit successful, False otherwise.
+        """
+        if not self.expenses:
+            print("No expenses to edit.")
+            return False
+        
+        if index < 0 or index >= len(self.expenses):
+            print(f"Invalid index. Please enter a number between 0 and {len(self.expenses) - 1}.")
+            return False
+        
+        old_expense = self.expenses[index]
+        self.expenses[index] = Expense(date, category, amount, description)
+        self.save_expenses()
+        print(f"Updated expense: {old_expense.amount} for {old_expense.description} -> {amount} for {description}")
+        return True
+    
     def export_to_csv(self, filename: Optional[str] = None) -> bool:
         """
         Export all expenses to a CSV file.
@@ -162,10 +229,12 @@ def main():
         print("1. Add Expense")
         print("2. List All Expenses")
         print("3. Export to CSV")
-        print("4. Exit")
+        print("4. Edit Expense")
+        print("5. Delete Expense")
+        print("6. Exit")
         print("="*50)
         
-        choice = get_user_input("Enter your choice (1-4): ")
+        choice = get_user_input("Enter your choice (1-6): ")
         
         if choice == '1':
             print("\nAdd New Expense:")
@@ -186,11 +255,51 @@ def main():
             tracker.export_to_csv(filename)
         
         elif choice == '4':
+            print("\nEdit Expense:")
+            tracker.list_expenses_with_indices()
+            if tracker.expenses:
+                try:
+                    index = int(get_user_input("Enter the index of the expense to edit: "))
+                    if 0 <= index < len(tracker.expenses):
+                        current_expense = tracker.expenses[index]
+                        print(f"\nCurrent expense: {current_expense.date} | {current_expense.category} | ${current_expense.amount} | {current_expense.description}")
+                        
+                        date = get_user_input(f"Enter new date (current: {current_expense.date}): ") or current_expense.date
+                        category = get_user_input(f"Enter new category (current: {current_expense.category}): ") or current_expense.category
+                        amount_input = get_user_input(f"Enter new amount (current: ${current_expense.amount}): ")
+                        amount = float(amount_input) if amount_input else current_expense.amount
+                        description = get_user_input(f"Enter new description (current: {current_expense.description}): ") or current_expense.description
+                        
+                        tracker.edit_expense(index, date, category, amount, description)
+                    else:
+                        print(f"Invalid index. Please enter a number between 0 and {len(tracker.expenses) - 1}.")
+                except ValueError:
+                    print("Invalid input. Please enter a valid number.")
+        
+        elif choice == '5':
+            print("\nDelete Expense:")
+            tracker.list_expenses_with_indices()
+            if tracker.expenses:
+                try:
+                    index = int(get_user_input("Enter the index of the expense to delete: "))
+                    if 0 <= index < len(tracker.expenses):
+                        expense_to_delete = tracker.expenses[index]
+                        confirm = get_user_input(f"Are you sure you want to delete expense: {expense_to_delete.amount} for {expense_to_delete.description}? (y/N): ")
+                        if confirm.lower() in ['y', 'yes']:
+                            tracker.delete_expense(index)
+                        else:
+                            print("Deletion cancelled.")
+                    else:
+                        print(f"Invalid index. Please enter a number between 0 and {len(tracker.expenses) - 1}.")
+                except ValueError:
+                    print("Invalid input. Please enter a valid number.")
+        
+        elif choice == '6':
             print("Thank you for using Expense Tracker!")
             break
         
         else:
-            print("Invalid choice. Please enter 1, 2, 3, or 4.")
+            print("Invalid choice. Please enter 1, 2, 3, 4, 5, or 6.")
 
 
 if __name__ == "__main__":

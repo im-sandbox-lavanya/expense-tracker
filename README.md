@@ -6,6 +6,8 @@ A Python command-line application to track your expenses and categorize them for
 
 - **Add Expenses**: Record expenses with date, category, amount, and description
 - **List Expenses**: View all recorded expenses with totals
+- **Edit Expenses**: Modify existing expenses with pre-populated current values
+- **Delete Expenses**: Remove expenses with confirmation prompts
 - **CSV Export**: Export all expense data to CSV files for analysis and record-keeping
 - **Data Persistence**: Expenses are saved to JSON file for persistence between sessions
 - **Special Character Support**: CSV export properly handles commas, quotes, and other special characters
@@ -27,7 +29,9 @@ python3 expense_tracker.py
 1. **Add Expense**: Enter a new expense with date (YYYY-MM-DD), category, amount, and description
 2. **List All Expenses**: View all recorded expenses with a summary total
 3. **Export to CSV**: Export all expenses to a CSV file
-4. **Exit**: Close the application
+4. **Edit Expense**: Modify existing expenses - displays indexed list for selection, shows current values for easy editing
+5. **Delete Expense**: Remove expenses with confirmation - displays indexed list for selection and requires confirmation
+6. **Exit**: Close the application
 
 ### CSV Export Feature
 

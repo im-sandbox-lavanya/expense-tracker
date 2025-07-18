@@ -94,6 +94,80 @@ class TestExpenseTracker(unittest.TestCase):
         self.assertEqual(expenses[0].category, "Food")
         self.assertEqual(expenses[1].date, "2024-01-16")
         self.assertEqual(expenses[1].category, "Transport")
+    
+    def test_delete_expense_valid_index(self):
+        """Test deleting an expense with valid index."""
+        # Add test expenses
+        self.tracker.add_expense("2024-01-15", "Food", 25.50, "Lunch")
+        self.tracker.add_expense("2024-01-16", "Transport", 15.00, "Bus fare")
+        self.assertEqual(len(self.tracker.expenses), 2)
+        
+        # Delete first expense
+        result = self.tracker.delete_expense(0)
+        self.assertTrue(result)
+        self.assertEqual(len(self.tracker.expenses), 1)
+        
+        # Verify remaining expense
+        self.assertEqual(self.tracker.expenses[0].date, "2024-01-16")
+        self.assertEqual(self.tracker.expenses[0].category, "Transport")
+    
+    def test_delete_expense_invalid_index(self):
+        """Test deleting an expense with invalid index."""
+        # Add test expense
+        self.tracker.add_expense("2024-01-15", "Food", 25.50, "Lunch")
+        
+        # Try to delete with invalid indices
+        result1 = self.tracker.delete_expense(-1)
+        self.assertFalse(result1)
+        result2 = self.tracker.delete_expense(1)
+        self.assertFalse(result2)
+        
+        # Verify expense still exists
+        self.assertEqual(len(self.tracker.expenses), 1)
+    
+    def test_delete_expense_empty_list(self):
+        """Test deleting from empty expense list."""
+        result = self.tracker.delete_expense(0)
+        self.assertFalse(result)
+    
+    def test_edit_expense_valid_index(self):
+        """Test editing an expense with valid index."""
+        # Add test expense
+        self.tracker.add_expense("2024-01-15", "Food", 25.50, "Lunch")
+        
+        # Edit the expense
+        result = self.tracker.edit_expense(0, "2024-01-20", "Transport", 30.00, "Taxi ride")
+        self.assertTrue(result)
+        
+        # Verify changes
+        expense = self.tracker.expenses[0]
+        self.assertEqual(expense.date, "2024-01-20")
+        self.assertEqual(expense.category, "Transport")
+        self.assertEqual(expense.amount, 30.00)
+        self.assertEqual(expense.description, "Taxi ride")
+    
+    def test_edit_expense_invalid_index(self):
+        """Test editing an expense with invalid index."""
+        # Add test expense
+        self.tracker.add_expense("2024-01-15", "Food", 25.50, "Lunch")
+        
+        # Try to edit with invalid indices
+        result1 = self.tracker.edit_expense(-1, "2024-01-20", "Transport", 30.00, "Taxi")
+        self.assertFalse(result1)
+        result2 = self.tracker.edit_expense(1, "2024-01-20", "Transport", 30.00, "Taxi")
+        self.assertFalse(result2)
+        
+        # Verify expense unchanged
+        expense = self.tracker.expenses[0]
+        self.assertEqual(expense.date, "2024-01-15")
+        self.assertEqual(expense.category, "Food")
+        self.assertEqual(expense.amount, 25.50)
+        self.assertEqual(expense.description, "Lunch")
+    
+    def test_edit_expense_empty_list(self):
+        """Test editing from empty expense list."""
+        result = self.tracker.edit_expense(0, "2024-01-20", "Transport", 30.00, "Taxi")
+        self.assertFalse(result)
 
 
 class TestCSVExport(unittest.TestCase):
