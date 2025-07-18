@@ -10,6 +10,13 @@ import os
 from datetime import datetime
 from typing import List, Dict, Optional
 
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    EXCEL_AVAILABLE = True
+except ImportError:
+    EXCEL_AVAILABLE = False
+
 
 class Expense:
     """Represents an expense entry."""
@@ -132,6 +139,86 @@ class ExpenseTracker:
         except Exception as e:
             print(f"Unexpected error during export: {e}")
             return False
+    
+    def export_to_excel(self, filename: Optional[str] = None) -> bool:
+        """
+        Export all expenses to an Excel file.
+        
+        Args:
+            filename: Optional filename for the Excel file. If None, uses timestamp.
+        
+        Returns:
+            bool: True if export successful, False otherwise.
+        """
+        if not EXCEL_AVAILABLE:
+            print("Excel export not available. Please install openpyxl: pip install openpyxl")
+            return False
+        
+        if not self.expenses:
+            print("No expenses to export.")
+            return False
+        
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"expenses_export_{timestamp}.xlsx"
+        
+        try:
+            # Create workbook and worksheet
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Expenses"
+            
+            # Define headers
+            headers = ['Date', 'Category', 'Amount', 'Description']
+            
+            # Style for headers
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_alignment = Alignment(horizontal="center")
+            
+            # Add headers with styling
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+            
+            # Add expense data
+            for row, expense in enumerate(self.expenses, 2):
+                ws.cell(row=row, column=1, value=expense.date)
+                ws.cell(row=row, column=2, value=expense.category)
+                ws.cell(row=row, column=3, value=expense.amount)
+                ws.cell(row=row, column=4, value=expense.description)
+            
+            # Auto-adjust column widths
+            for column in ws.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
+                ws.column_dimensions[column_letter].width = adjusted_width
+            
+            # Add summary row
+            summary_row = len(self.expenses) + 3
+            ws.cell(row=summary_row, column=3, value="Total:")
+            total_amount = sum(expense.amount for expense in self.expenses)
+            total_cell = ws.cell(row=summary_row, column=4, value=total_amount)
+            total_cell.font = Font(bold=True)
+            
+            # Save the workbook
+            wb.save(filename)
+            
+            print(f"Successfully exported {len(self.expenses)} expenses to {filename}")
+            return True
+            
+        except Exception as e:
+            print(f"Error exporting to Excel: {e}")
+            return False
 
 
 def get_user_input(prompt: str, input_type: type = str):
@@ -162,10 +249,11 @@ def main():
         print("1. Add Expense")
         print("2. List All Expenses")
         print("3. Export to CSV")
-        print("4. Exit")
+        print("4. Export to Excel")
+        print("5. Exit")
         print("="*50)
         
-        choice = get_user_input("Enter your choice (1-4): ")
+        choice = get_user_input("Enter your choice (1-5): ")
         
         if choice == '1':
             print("\nAdd New Expense:")
@@ -186,11 +274,17 @@ def main():
             tracker.export_to_csv(filename)
         
         elif choice == '4':
+            print("\nExport to Excel:")
+            custom_filename = get_user_input("Enter filename (or press Enter for auto-generated): ")
+            filename = custom_filename if custom_filename else None
+            tracker.export_to_excel(filename)
+        
+        elif choice == '5':
             print("Thank you for using Expense Tracker!")
             break
         
         else:
-            print("Invalid choice. Please enter 1, 2, 3, or 4.")
+            print("Invalid choice. Please enter 1, 2, 3, 4, or 5.")
 
 
 if __name__ == "__main__":

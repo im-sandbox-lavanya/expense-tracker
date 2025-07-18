@@ -24,7 +24,9 @@ MANIFEST
 # Test files
 demo_expenses.json
 demo_export.csv
+demo_export.xlsx
 expenses_export_*.csv
+expenses_export_*.xlsx
 
 # IDE
 .vscode/

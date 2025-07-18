@@ -10,6 +10,13 @@ import json
 import tempfile
 from expense_tracker import Expense, ExpenseTracker
 
+# Check if openpyxl is available for Excel tests
+try:
+    from openpyxl import load_workbook
+    EXCEL_AVAILABLE = True
+except ImportError:
+    EXCEL_AVAILABLE = False
+
 
 class TestExpense(unittest.TestCase):
     """Test cases for the Expense class."""
@@ -225,6 +232,135 @@ class TestCSVExport(unittest.TestCase):
             rows = list(reader)
             # Original 4 + 100 new expenses
             self.assertEqual(len(rows), 104)
+
+
+@unittest.skipIf(not EXCEL_AVAILABLE, "openpyxl not available")
+class TestExcelExport(unittest.TestCase):
+    """Test cases for Excel export functionality."""
+    
+    def setUp(self):
+        """Set up test environment."""
+        self.temp_dir = tempfile.mkdtemp()
+        self.test_data_file = os.path.join(self.temp_dir, 'test_expenses.json')
+        self.tracker = ExpenseTracker(self.test_data_file)
+        
+        # Add test data
+        self.tracker.add_expense("2024-01-15", "Food", 25.50, "Lunch at restaurant")
+        self.tracker.add_expense("2024-01-16", "Transport", 15.00, "Bus fare")
+        self.tracker.add_expense("2024-01-17", "Entertainment", 45.75, "Movie, popcorn")
+        self.tracker.add_expense("2024-01-18", "Food", 12.25, "Coffee, pastry")
+    
+    def tearDown(self):
+        """Clean up test environment."""
+        # Clean up files
+        for file in os.listdir(self.temp_dir):
+            file_path = os.path.join(self.temp_dir, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+    
+    def test_export_to_excel_basic(self):
+        """Test basic Excel export functionality."""
+        excel_file = os.path.join(self.temp_dir, 'test_export.xlsx')
+        result = self.tracker.export_to_excel(excel_file)
+        
+        self.assertTrue(result)
+        self.assertTrue(os.path.exists(excel_file))
+        
+        # Verify Excel content
+        wb = load_workbook(excel_file)
+        ws = wb.active
+        
+        # Check headers
+        self.assertEqual(ws.cell(row=1, column=1).value, "Date")
+        self.assertEqual(ws.cell(row=1, column=2).value, "Category")
+        self.assertEqual(ws.cell(row=1, column=3).value, "Amount")
+        self.assertEqual(ws.cell(row=1, column=4).value, "Description")
+        
+        # Check first row of data
+        self.assertEqual(ws.cell(row=2, column=1).value, "2024-01-15")
+        self.assertEqual(ws.cell(row=2, column=2).value, "Food")
+        self.assertEqual(ws.cell(row=2, column=3).value, 25.50)
+        self.assertEqual(ws.cell(row=2, column=4).value, "Lunch at restaurant")
+        
+        # Check that we have the right number of data rows (4 + 1 header + 1 empty + 1 total = 7 rows used)
+        # Data rows: 2, 3, 4, 5 (4 rows)
+        # Total row should be at row 7 (4 data rows + 1 header + 2 gap)
+        self.assertEqual(ws.cell(row=7, column=3).value, "Total:")
+        self.assertEqual(ws.cell(row=7, column=4).value, 98.50)  # 25.50 + 15.00 + 45.75 + 12.25
+    
+    def test_export_to_excel_with_special_characters(self):
+        """Test Excel export with special characters in descriptions."""
+        # Add expense with special characters
+        self.tracker.add_expense("2024-01-19", "Food", 30.00, "Lunch, \"quoted\", with commas")
+        
+        excel_file = os.path.join(self.temp_dir, 'test_special_chars.xlsx')
+        result = self.tracker.export_to_excel(excel_file)
+        
+        self.assertTrue(result)
+        
+        # Verify Excel handles special characters correctly
+        wb = load_workbook(excel_file)
+        ws = wb.active
+        
+        # Find the row with special characters (should be row 6, since we added 1 more expense)
+        self.assertEqual(ws.cell(row=6, column=4).value, "Lunch, \"quoted\", with commas")
+    
+    def test_export_empty_expenses_excel(self):
+        """Test Excel export with no expenses."""
+        empty_tracker = ExpenseTracker(os.path.join(self.temp_dir, 'empty.json'))
+        excel_file = os.path.join(self.temp_dir, 'empty_export.xlsx')
+        
+        result = empty_tracker.export_to_excel(excel_file)
+        self.assertFalse(result)
+        self.assertFalse(os.path.exists(excel_file))
+    
+    def test_export_auto_filename_excel(self):
+        """Test Excel export with auto-generated filename."""
+        # Change to temp directory to control where file is created
+        original_cwd = os.getcwd()
+        os.chdir(self.temp_dir)
+        
+        try:
+            result = self.tracker.export_to_excel()
+            self.assertTrue(result)
+            
+            # Check that an Excel file was created
+            xlsx_files = [f for f in os.listdir('.') if f.endswith('.xlsx')]
+            self.assertEqual(len(xlsx_files), 1)
+            
+            # Verify the auto-generated file contains correct data
+            excel_file = xlsx_files[0]
+            wb = load_workbook(excel_file)
+            ws = wb.active
+            
+            # Should have 4 data rows + 1 header
+            # Check that we have data in the expected rows
+            self.assertEqual(ws.cell(row=2, column=1).value, "2024-01-15")
+            self.assertEqual(ws.cell(row=5, column=1).value, "2024-01-18")  # Last data row
+        
+        finally:
+            os.chdir(original_cwd)
+    
+    def test_excel_styling(self):
+        """Test that Excel export includes proper styling."""
+        excel_file = os.path.join(self.temp_dir, 'test_styling.xlsx')
+        result = self.tracker.export_to_excel(excel_file)
+        
+        self.assertTrue(result)
+        
+        # Load workbook and check styling
+        wb = load_workbook(excel_file)
+        ws = wb.active
+        
+        # Check that header cells have styling
+        header_cell = ws.cell(row=1, column=1)
+        self.assertTrue(header_cell.font.bold)
+        # RGB color includes alpha channel, so check for the color hex value
+        self.assertEqual(header_cell.font.color.rgb, "00FFFFFF")
+        
+        # Check that total row is bold
+        total_cell = ws.cell(row=7, column=4)  # Total amount cell
+        self.assertTrue(total_cell.font.bold)
 
 
 if __name__ == '__main__':
